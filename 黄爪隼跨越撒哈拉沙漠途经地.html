@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于ArcGIS API for JavaScript的WebGIS应用</title>
+    <!-- 引入ArcGIS API for JavaScript的CSS和JS文件 -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.32/"></script>
+    <style>
+        /* 整体页面布局 */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+        #main {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+
+        #mapDiv {
+            flex: 2;
+            height: 100%;
+        }
+
+        #basemapGalleryDiv {
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
+            background-color: #f4f4f4;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 页眉区域 -->
+    <div id="header">
+        <h1>黄爪隼跨越撒哈拉沙漠途径地</h1>
+    </div>
+    <!-- 主体内容区域 -->
+    <div id="main">
+        <!-- 地图区域 -->
+        <div id="mapDiv"></div>
+        <!-- 底图库区域 -->
+        <div id="basemapGalleryDiv"></div>
+    </div>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Legend",
+            "esri/widgets/ScaleBar",
+            "esri/widgets/Search",
+            "esri/widgets/LayerList",
+            "esri/widgets/BasemapGallery",
+            "esri/layers/FeatureLayer",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol"
+        ], function (
+            Map,
+            MapView,
+            Legend,
+            ScaleBar,
+            Search,
+            LayerList,
+            BasemapGallery,
+            FeatureLayer,
+            SimpleMarkerSymbol,
+            SimpleLineSymbol,
+            SimpleFillSymbol
+        ) {
+            // 创建地图对象，选择一个底图（这里以streets底图为例）
+            const map = new Map({
+                basemap: "streets"
+            });
+
+            // 假设是点要素，修改点要素的符号样式
+            const pointRenderer = {
+                type: "simple",
+                symbol: {
+                    type: "simple-marker",
+                    color: [255, 0, 0],
+                    style: "circle",
+                    size: 10
+                }
+            };
+
+            const featureLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/跨越撒哈拉沙漠/FeatureServer/0",
+                renderer: pointRenderer
+            });
+            // 将专题图层添加到地图中
+            map.add(featureLayer);
+
+            // 创建地图视图，设置初始中心为撒哈拉沙漠大致位置，并设置初始 zoom 级别以近似达到 2000km 比例尺
+            const view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [20, 25],
+                zoom: 3
+            });
+
+            // 添加比例尺微件
+            const scaleBar = new ScaleBar({
+                view: view,
+                unit: "metric"
+            });
+            view.ui.add(scaleBar, "bottom-left");
+
+            // 添加图例微件
+            const legend = new Legend({
+                view: view
+            });
+            view.ui.add(legend, "bottom-right");
+
+            // 添加搜索框微件
+            const search = new Search({
+                view: view,
+                sources: [{
+                    url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer",
+                    searchFields: ["Address"],
+                    displayField: "Address",
+                    exactMatch: false,
+                    outFields: ["*"],
+                    name: "World Geocoding Service",
+                    placeholder: "搜索地点"
+                }]
+            });
+            view.ui.add(search, "top-right");
+
+            // 添加图层列表微件
+            const layerList = new LayerList({
+                view: view
+            });
+            view.ui.add(layerList, "top-left");
+
+            // 创建底图库微件
+            const basemapGallery = new BasemapGallery({
+                view: view,
+                container: "basemapGalleryDiv"
+            });
+            // 将底图库添加到页面中
+            basemapGallery.startup();
+        });
+    </script>
+</body>
+
+</html>    
